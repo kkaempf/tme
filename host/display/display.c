@@ -88,6 +88,7 @@ _tme_screen_update(struct tme_screen *screen) {
     }
 #endif
   }
+  return rc;
 }
 
 /* the generic display callout function.  it must be called with the mutex locked: */
@@ -474,6 +475,7 @@ _tme_screen_configure(struct tme_screen *screen)
     conn_fb->tme_fb_connection_height = height;
     conn_fb->tme_fb_connection_buffsz = 0;
   }
+  return 0;
 }
 
 /* this is called for a mode change: */

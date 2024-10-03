@@ -366,6 +366,7 @@ _tme_sdl_display_update(struct tme_display *display) {
     }
     return TRUE;
   }
+  return FALSE;
 }
   
 /* the new SDL display function: */

@@ -430,6 +430,7 @@ int _tmesh_eval() {
       tme_free(output);
     }
   }
+  return 0;
 }
 
 /* our thread: */
