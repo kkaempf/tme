@@ -174,9 +174,9 @@ struct nat_family {
 };
 
 nat_hdr_builder nat_hdr_builders[] = {
-  nft_table_nlmsg_build_hdr,
-  nft_chain_nlmsg_build_hdr,
-  nft_rule_nlmsg_build_hdr
+  nftnl_table_nlmsg_build_hdr,
+  nftnl_chain_nlmsg_build_hdr,
+  nftnl_rule_nlmsg_build_hdr
 };
 
 uint16_t nat_cmds[] = {
@@ -186,15 +186,15 @@ uint16_t nat_cmds[] = {
 };
 
 struct nat_family nat_families[] = {
-  { (nat_attr_get)nft_table_attr_get_u32, NFT_TABLE_ATTR_FAMILY },
-  { (nat_attr_get)nft_chain_attr_get_u32, NFT_CHAIN_ATTR_FAMILY },
-  { (nat_attr_get)nft_rule_attr_get_u32, NFT_RULE_ATTR_FAMILY }
+  { (nat_attr_get)nftnl_table_get_u32, NFTNL_TABLE_FAMILY },
+  { (nat_attr_get)nftnl_chain_get_u32, NFTNL_CHAIN_FAMILY },
+  { (nat_attr_get)nftnl_rule_get_u32, NFTNL_RULE_FAMILY }
 };
 
 nat_msg_builder nat_msg_builders[] = {
-  (nat_msg_builder)nft_table_nlmsg_build_payload,
-  (nat_msg_builder)nft_chain_nlmsg_build_payload,
-  (nat_msg_builder)nft_rule_nlmsg_build_payload
+  (nat_msg_builder)nftnl_table_nlmsg_build_payload,
+  (nat_msg_builder)nftnl_chain_nlmsg_build_payload,
+  (nat_msg_builder)nftnl_rule_nlmsg_build_payload
 };
 
 #endif // TME_DO_NFT
@@ -377,118 +377,118 @@ int _tme_tun_tap_args(const char * const args[],
 }
 
 #if TME_DO_NFT
-static int _tme_nat_rule_add_payload(struct nft_rule *r, uint32_t base, uint32_t dreg,
+static int _tme_nat_rule_add_payload(struct nftnl_rule *r, uint32_t base, uint32_t dreg,
 				     uint32_t offset, uint32_t len)
 {
-  struct nft_rule_expr *e;
+  struct nftnl_rule *e;
 
-  e = nft_rule_expr_alloc("payload");
+  e = nftnl_expr_alloc("payload");
   if (e == NULL) {
     return -1;
   }
 
-  nft_rule_expr_set_u32(e, NFT_EXPR_PAYLOAD_BASE, base);
-  nft_rule_expr_set_u32(e, NFT_EXPR_PAYLOAD_DREG, dreg);
-  nft_rule_expr_set_u32(e, NFT_EXPR_PAYLOAD_OFFSET, offset);
-  nft_rule_expr_set_u32(e, NFT_EXPR_PAYLOAD_LEN, len);
+  nftnl_expr_set_u32(e, NFTNL_EXPR_PAYLOAD_BASE, base);
+  nftnl_expr_set_u32(e, NFTNL_EXPR_PAYLOAD_DREG, dreg);
+  nftnl_expr_set_u32(e, NFTNL_EXPR_PAYLOAD_OFFSET, offset);
+  nftnl_expr_set_u32(e, NFTNL_EXPR_PAYLOAD_LEN, len);
 
-  nft_rule_add_expr(r, e);
+  nftnl_rule_add_expr(r, e);
   return (TME_OK);
 }
 
-static int _tme_nat_rule_add_meta(struct nft_rule *r, uint32_t dreg, enum nft_meta_keys key)
+static int _tme_nat_rule_add_meta(struct nftnl_rule *r, uint32_t dreg, int key)
 {
-  struct nft_rule_expr *e;
+  struct nftnl_expr *e;
 
-  e = nft_rule_expr_alloc("meta");
+  e = nftnl_expr_alloc("meta");
   if (e == NULL) {
     return -1;
   }
 
-  nft_rule_expr_set_u32(e, NFT_EXPR_META_DREG, dreg);
-  nft_rule_expr_set_u32(e, NFT_EXPR_META_KEY, key);
-  nft_rule_add_expr(r, e);
+  nftnl_expr_set_u32(e, NFTNL_EXPR_META_DREG, dreg);
+  nftnl_expr_set_u32(e, NFTNL_EXPR_META_KEY, key);
+  nftnl_rule_add_expr(r, e);
   return (TME_OK);
 }
 
-static int _tme_nat_rule_add_bitwise(struct nft_rule *r, uint32_t dreg,
+static int _tme_nat_rule_add_bitwise(struct nftnl_rule *r, uint32_t dreg,
 				     const void *mask, const void *xor, uint32_t len)
 {
-  struct nft_rule_expr *e;
+  struct nftnl_expr *e;
 
-  e = nft_rule_expr_alloc("bitwise");
+  e = nftnl_expr_alloc("bitwise");
   if (e == NULL) {
     return -1;
   }
 
-  nft_rule_expr_set_u32(e, NFT_EXPR_BITWISE_SREG, dreg);
-  nft_rule_expr_set_u32(e, NFT_EXPR_BITWISE_DREG, dreg);
-  nft_rule_expr_set_u32(e, NFT_EXPR_BITWISE_LEN, len);
-  nft_rule_expr_set(e, NFT_EXPR_BITWISE_MASK, mask, len);
-  nft_rule_expr_set(e, NFT_EXPR_BITWISE_XOR, xor, len);
+  nftnl_expr_set_u32(e, NFTNL_EXPR_BITWISE_SREG, dreg);
+  nftnl_expr_set_u32(e, NFTNL_EXPR_BITWISE_DREG, dreg);
+  nftnl_expr_set_u32(e, NFTNL_EXPR_BITWISE_LEN, len);
+  nftnl_expr_set(e, NFTNL_EXPR_BITWISE_MASK, mask, len);
+  nftnl_expr_set(e, NFTNL_EXPR_BITWISE_XOR, xor, len);
 
-  nft_rule_add_expr(r, e);
+  nftnl_rule_add_expr(r, e);
   return (TME_OK);
 }
 
-static int _tme_nat_rule_add_cmp(struct nft_rule *r, uint32_t sreg, uint32_t op,
+static int _tme_nat_rule_add_cmp(struct nftnl_rule *r, uint32_t sreg, uint32_t op,
 				  const void *data, uint32_t data_len)
 {
-  struct nft_rule_expr *e;
+  struct nftnl_expr *e;
 
-  e = nft_rule_expr_alloc("cmp");
+  e = nftnl_expr_alloc("cmp");
   if (e == NULL) {
     return -1;
   }
 
-  nft_rule_expr_set_u32(e, NFT_EXPR_CMP_SREG, sreg);
-  nft_rule_expr_set_u32(e, NFT_EXPR_CMP_OP, op);
-  nft_rule_expr_set(e, NFT_EXPR_CMP_DATA, data, data_len);
+  nftnl_expr_set_u32(e, NFTNL_EXPR_CMP_SREG, sreg);
+  nftnl_expr_set_u32(e, NFTNL_EXPR_CMP_OP, op);
+  nftnl_expr_set(e, NFTNL_EXPR_CMP_DATA, data, data_len);
 
-  nft_rule_add_expr(r, e);
+  nftnl_rule_add_expr(r, e);
   return (TME_OK);
 }
 
-static int _tme_nat_rule_add_immediate(struct nft_rule *r, uint32_t dreg,
+static int _tme_nat_rule_add_immediate(struct nftnl_rule *r, uint32_t dreg,
 					const void *data, uint32_t data_len)
 {
-  struct nft_rule_expr *e;
+  struct nftnl_expr *e;
 
-  e = nft_rule_expr_alloc("immediate");
+  e = nftnl_expr_alloc("immediate");
   if (e == NULL) {
     return -1;
   }
 
-  nft_rule_expr_set_u32(e, NFT_EXPR_IMM_DREG, dreg);
-  nft_rule_expr_set(e, NFT_EXPR_IMM_DATA, data, data_len);
+  nftnl_expr_set_u32(e, NFTNL_EXPR_IMM_DREG, dreg);
+  nftnl_expr_set(e, NFTNL_EXPR_IMM_DATA, data, data_len);
 
-  nft_rule_add_expr(r, e);
+  nftnl_rule_add_expr(r, e);
   return (TME_OK);
 }
 
-static int _tme_nat_rule_add_nat(struct nft_rule *r, uint32_t type,
+static int _tme_nat_rule_add_nat(struct nftnl_rule *r, uint32_t type,
 				  uint32_t flags, uint32_t sreg)
 {
-  struct nft_rule_expr *e;
+  struct nftnl_expr *e;
   uint32_t family;
 
-  e = nft_rule_expr_alloc("nat");
+  e = nftnl_expr_alloc("nat");
   if (e == NULL) {
     return -1;
   }
 
-  nft_rule_expr_set_u32(e, NFT_EXPR_NAT_TYPE, type);
+  nftnl_expr_set_u32(e, NFTNL_EXPR_NAT_TYPE, type);
 
-  family = nft_rule_attr_get_u32(r, NFT_RULE_ATTR_FAMILY);
-  nft_rule_expr_set_u32(e, NFT_EXPR_NAT_FAMILY, family);
+  family = nftnl_rule_get_u32(r, NFTNL_RULE_FAMILY);
+  nftnl_expr_set_u32(e, NFTNL_EXPR_NAT_FAMILY, family);
 
   if (flags != 0)
-    nft_rule_expr_set_u32(e, NFT_EXPR_NAT_FLAGS, flags);
+    nftnl_rule_expr_set_u32(e, NFTNL_EXPR_NAT_FLAGS, flags);
 
-  nft_rule_expr_set_u32(e, NFT_EXPR_NAT_REG_ADDR_MIN,
+  nftnl_expr_set_u32(e, NFTNL_EXPR_NAT_REG_ADDR_MIN,
 			sreg);
 
-  nft_rule_add_expr(r, e);
+  nftnl_rule_add_expr(r, e);
 
   return (TME_OK);
 }
@@ -508,7 +508,7 @@ static int _tme_nat_run(struct tme_nat *nat, int num)
   nat_msg_builder nat_build_msg;
   int i;
 
-  batching = nft_batch_is_supported();
+  batching = nftnl_batch_is_supported();
   if (batching < 0) {
     return -1;
   }
@@ -519,7 +519,7 @@ static int _tme_nat_run(struct tme_nat *nat, int num)
     batch = mnl_nlmsg_batch_start(buf, sizeof(buf));
     
     if (batching) {
-      nft_batch_begin(mnl_nlmsg_batch_current(batch), seq++);
+      nftnl_batch_begin(mnl_nlmsg_batch_current(batch), seq++);
       mnl_nlmsg_batch_next(batch);
     }
     
@@ -537,7 +537,7 @@ static int _tme_nat_run(struct tme_nat *nat, int num)
     mnl_nlmsg_batch_next(batch);
     
     if (batching) {
-      nft_batch_end(mnl_nlmsg_batch_current(batch), seq++);
+      nftnl_batch_end(mnl_nlmsg_batch_current(batch), seq++);
       mnl_nlmsg_batch_next(batch);
     }
     
@@ -647,9 +647,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #if TME_DO_NFT
   in_addr_t zero = 0;
   FILE *f;
-  struct nft_table *table;
-  struct nft_chain *prechain, *postchain;
-  struct nft_rule *rule;
+  struct nftnl_table *table;
+  struct nftnl_chain *prechain, *postchain;
+  struct nftnl_rule *rule;
   struct tme_nat nat[4];
 #elif TME_DO_APF
   int mib[4];
@@ -936,7 +936,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   /* NAT on Linux using NFTABLES */
   i=0;
 
-  table = nft_table_alloc();
+  table = nftnl_table_alloc();
   if (table == NULL) {
     tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
@@ -944,12 +944,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     goto exit_nat;
   }
 
-  nft_table_attr_set_u32(table, NFT_TABLE_ATTR_FAMILY, NFPROTO_IPV4);
-  nft_table_attr_set(table, NFT_TABLE_ATTR_NAME, "tme");
+  nftnl_table_set_u32(table, NFTNL_TABLE_FAMILY, NFPROTO_IPV4);
+  nftnl_table_set_data(table, NFTNL_TABLE_NAME, "tme", sizeof(char *));
   nat[i].type = TME_NAT_TABLE;
   nat[i++].msg = table;
 
-  prechain = nft_chain_alloc();
+  prechain = nftnl_chain_alloc();
   if (prechain == NULL) {
     tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
@@ -957,16 +957,15 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     goto exit_nat;
   }
 
-  nft_chain_attr_set_u32(prechain, NFT_CHAIN_ATTR_FAMILY, nft_table_attr_get_u32(table, NFT_TABLE_ATTR_FAMILY));
-  nft_chain_attr_set(prechain, NFT_CHAIN_ATTR_TABLE, nft_table_attr_get_str(table, NFT_TABLE_ATTR_NAME));
-  nft_chain_attr_set(prechain, NFT_CHAIN_ATTR_NAME, "prerouting");
-  nft_chain_attr_set_u32(prechain, NFT_CHAIN_ATTR_HOOKNUM, NF_INET_PRE_ROUTING);
-  nft_chain_attr_set_u32(prechain, NFT_CHAIN_ATTR_PRIO, 0);
-  nft_chain_attr_set(prechain, NFT_CHAIN_ATTR_TYPE, "nat");
+  nftnl_chain_set_u32(prechain, NFTNL_CHAIN_FAMILY, nftnl_table_get_u32(table, NFTNL_TABLE_FAMILY));
+  nftnl_chain_set_data(prechain, NFTNL_CHAIN_TABLE, nftnl_table_get_str(table, NFTNL_TABLE_NAME), sizeof(char *));
+  nftnl_chain_set_data(prechain, NFTNL_CHAIN_NAME, "prerouting", sizeof(char *));
+  nftnl_chain_set_u32(prechain, NFTNL_CHAIN_HOOKNUM, NF_INET_PRE_ROUTING);
+  nftnl_chain_set_u32(prechain, NFTNL_CHAIN_PRIO, 0);
+  nftnl_chain_set_data(prechain, NFTA_CHAIN_TYPE, "nat", sizeof(char *));
   nat[i].type = TME_NAT_CHAIN;
   nat[i++].msg = prechain;
-
-  postchain = nft_chain_alloc();
+  postchain = nftnl_chain_alloc();
   if (postchain == NULL) {
     tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
@@ -974,16 +973,16 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     goto exit_nat;
   }
 
-  nft_chain_attr_set_u32(postchain, NFT_CHAIN_ATTR_FAMILY, nft_table_attr_get_u32(table, NFT_TABLE_ATTR_FAMILY));
-  nft_chain_attr_set(postchain, NFT_CHAIN_ATTR_TABLE, nft_table_attr_get_str(table, NFT_TABLE_ATTR_NAME));
-  nft_chain_attr_set(postchain, NFT_CHAIN_ATTR_NAME, "postrouting");
-  nft_chain_attr_set_u32(postchain, NFT_CHAIN_ATTR_HOOKNUM, NF_INET_POST_ROUTING);
-  nft_chain_attr_set_u32(postchain, NFT_CHAIN_ATTR_PRIO, 0);
-  nft_chain_attr_set(postchain, NFT_CHAIN_ATTR_TYPE, "nat");
+  nftnl_chain_set_u32(postchain, NFTNL_CHAIN_FAMILY, nftnl_table_get_u32(table, NFTNL_TABLE_FAMILY));
+  nftnl_chain_set_data(postchain, NFTNL_CHAIN_TABLE, nftnl_table_get_str(table, NFTNL_TABLE_NAME), sizeof(char *));
+  nftnl_chain_set_data(postchain, NFTNL_CHAIN_NAME, "postrouting", sizeof(char *));
+  nftnl_chain_set_u32(postchain, NFTNL_CHAIN_HOOKNUM, NF_INET_POST_ROUTING);
+  nftnl_chain_set_u32(postchain, NFTNL_CHAIN_PRIO, 0);
+  nftnl_chain_set_data(postchain, NFTA_CHAIN_TYPE, "nat", sizeof(char *));
   nat[i].type = TME_NAT_CHAIN;
   nat[i++].msg = postchain;
 
-  rule = nft_rule_alloc();
+  rule = nftnl_rule_alloc();
   if (rule == NULL) {
     tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
@@ -991,14 +990,14 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     goto exit_nat;
   }
 
-  nft_rule_attr_set_u32(rule, NFT_RULE_ATTR_FAMILY, nft_chain_attr_get_u32(postchain, NFT_CHAIN_ATTR_FAMILY));
-  nft_rule_attr_set(rule, NFT_RULE_ATTR_TABLE, nft_chain_attr_get_str(postchain, NFT_CHAIN_ATTR_TABLE));
-  nft_rule_attr_set(rule, NFT_RULE_ATTR_CHAIN, nft_chain_attr_get_str(postchain, NFT_CHAIN_ATTR_NAME));
+  nftnl_rule_set_u32(rule, NFTNL_RULE_FAMILY, nftnl_chain_get_u32(postchain, NFTNL_CHAIN_FAMILY));
+  nftnl_rule_set_data(rule, NFTNL_RULE_TABLE, nftnl_chain_get_str(postchain, NFTNL_CHAIN_TABLE), sizeof(char *));
+  nftnl_rule_set_data(rule, NFTNL_RULE_CHAIN, nftnl_chain_get_str(postchain, NFTNL_CHAIN_NAME), sizeof(char *));
   nat[i].type = TME_NAT_RULE;
   nat[i++].msg = rule;
   
-  //_tme_nat_rule_add_meta(rule, NFT_REG_1, NFT_META_IIFNAME);
-  //_tme_nat_rule_add_cmp(rule, NFT_REG_1, NFT_CMP_EQ, TAPIF, IFNAMSIZ);
+  //_tme_nat_rule_add_meta(rule, NFTA_REG_1, NFTA_META_IIFNAME);
+  //_tme_nat_rule_add_cmp(rule, NFTA_REG_1, NFTA_CMP_EQ, TAPIF, IFNAMSIZ);
   _tme_nat_rule_add_payload(rule, NFT_PAYLOAD_NETWORK_HEADER, NFT_REG_1,
 			    offsetof(struct iphdr, saddr), sizeof(uint32_t));
   _tme_nat_rule_add_bitwise(rule, NFT_REG_1, &TAPNETMASK.s_addr, &zero, sizeof(in_addr_t));
@@ -1047,10 +1046,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     }
   }
 
-  nft_table_free(table);
-  nft_chain_free(prechain);
-  nft_chain_free(postchain);
-  nft_rule_free(rule);
+  nftnl_table_free(table);
+  nftnl_chain_free(prechain);
+  nftnl_chain_free(postchain);
+  nftnl_rule_free(rule);
 
  exit_nat:
 #elif TME_DO_APF // !TME_DO_NFT

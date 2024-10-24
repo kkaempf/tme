@@ -145,9 +145,9 @@ if test "x$ac_cv_search_mnl_socket_open" != "xnone required" && test "$ac_cv_sea
    NATLIBS="$ac_cv_search_mnl_socket_open ${NATLIBS}"
 fi
 
-AC_SEARCH_LIBS([nft_rule_alloc], [nftnl])
-if test "x$ac_cv_search_nft_rule_alloc" != "xnone required" && test "x$ac_cv_search_nft_rule_alloc" != xno; then
-   NATLIBS="$ac_cv_search_nft_rule_alloc ${NATLIBS}"
+AC_SEARCH_LIBS([nftnl_rule_alloc], [nftnl])
+if test "x$ac_cv_search_nftnl_rule_alloc" != "xnone required" && test "x$ac_cv_search_nftnl_rule_alloc" != xno; then
+   NATLIBS="$ac_cv_search_nftnl_rule_alloc ${NATLIBS}"
 fi
 
 AC_SEARCH_LIBS([npf_nat_create], [npf])
