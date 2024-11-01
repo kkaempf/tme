@@ -870,7 +870,7 @@ main(int argc, char **argv)
   input_stdin->_tmesh_input_buffer[sizeof(input_stdin->_tmesh_input_buffer) - 1] = '\0';
   
   /* create our stdin io: */
-  io.tmesh_io_name = "*stdin*";
+  io.tmesh_io_name = strdup("*stdin*"); /* tmesh-input.y does a free() on tmesh_io_name */
   io.tmesh_io_private = input_stdin;
   io.tmesh_io_input_line = 0;
   io.tmesh_io_getc = _tmesh_getc;
